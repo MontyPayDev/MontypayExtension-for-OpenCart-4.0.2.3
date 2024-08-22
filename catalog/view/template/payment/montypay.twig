@@ -1,0 +1,68 @@
+{# {% if testmode %}
+<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ text_testmode }}</div>
+{% endif %} #}
+
+{% if redirect_url %}
+
+  <form id='form-credit-card' action="{{ redirect_url }}">
+
+    <div class="buttons">
+      <div class="text-end">
+        <input type="submit" value="{{ button_confirm }}" class="btn btn-primary" id="button-confirm" />
+      </div>
+    </div>
+  </form>
+  <script type="text/javascript"><!--
+$('#form-credit-card').on('submit', function(e) {
+    e.preventDefault();
+
+    var element = this;
+
+    $.ajax({
+        url: 'index.php?route=extension/montypay/payment/montypay.confirm&language={{ language }}',
+        type: 'post',
+        data: $('#form-credit-card').serialize(),
+        dataType: 'json',
+        contentType: 'application/x-www-form-urlencoded',
+        cache: false,
+        processData: false,
+        beforeSend: function() {
+            $('#button-confirm').button('loading');
+        },
+        complete: function() {
+            $('#button-confirm').button('reset');
+        },
+        success: function(json) {
+
+            if (json['redirect']) {
+                location = json['redirect'];
+            }
+
+            if (json['error']) {
+                if (json['error']['warning']) {
+                    $('#alert').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa-solid fa-circle-exclamation"></i> ' + json['error']['warning'] + ' <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                }
+
+                for (key in json['error']) {
+                    $('#input-' + key.replaceAll('_', '-')).addClass('is-invalid').find('.form-control, .form-select, .form-check-input, .form-check-label').addClass('is-invalid');
+                    $('#error-' + key.replaceAll('_', '-')).html(json['error'][key]).addClass('d-block');
+                }
+            }
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+            console.log(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+        }
+    });
+});
+//--></script>
+
+{% else %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i>
+    {{error_message}}<br>
+        {% set i = 1 %}
+        {% for error in errors %}
+          {{ error.error_message }}<br>          
+          {% set i = i + 1 %}
+        {% endfor %}
+    </div>
+{% endif %}
